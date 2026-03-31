@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>運費試算</title>
+<style>
+:root{
+  --bg:#f6f1ea; --card:#fff; --line:#e5ddd2; --text:#4a3f35; --muted:#948474;
+  --accent:#7b624d; --soft:#efe7db; --soft2:#f8f3eb; --shadow:0 10px 30px rgba(92,70,44,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#f6f1ea;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;color:var(--text)}
+.wrap{max-width:430px;margin:auto;padding:16px}
+.hero{margin:4px 2px 14px}
+.hero h1{margin:0;font-size:40px;line-height:.95;color:var(--accent);font-weight:900}
+.hero p{margin:14px 0 0;color:var(--muted);font-size:14px;line-height:1.8}
+.tabs{display:flex;gap:8px;padding:8px;background:var(--soft);border:1px solid var(--line);border-radius:20px;margin-bottom:16px}
+.tabs button{flex:1;border:0;background:transparent;border-radius:14px;padding:12px 8px;font-size:13px;font-weight:900;color:#7c6d5e;cursor:pointer}
+.tabs button.active{background:#fff;color:var(--accent);box-shadow:var(--shadow)}
+.card{background:#fff;border-radius:24px;padding:18px;margin-bottom:16px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.title{font-size:18px;font-weight:900;margin-bottom:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+input,select{width:100%;height:48px;border-radius:14px;border:2px solid #e0d6c9;padding:0 10px;font-size:16px;background:#fff}
+label{font-size:13px;font-weight:900;margin-bottom:6px;display:block;color:#7e7164}
+.btn{width:100%;background:#7b624d;color:#fff;border:0;padding:14px;border-radius:16px;font-weight:900;font-size:16px;cursor:pointer}
+.result{text-align:center;padding:18px;border-radius:20px;background:#f3ede6;border:1px solid #e5ddd2;margin-bottom:16px}
+.big{font-size:40px;font-weight:900}
+.rule, .notebox{background:var(--soft2);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:10px;line-height:1.9;font-size:13px;color:#5b4f44}
+.hidden{display:none}
+.tip{font-size:12px;color:#8a7c6f;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Freight<br>Calculator</h1>
+    <p>柔和奶茶風格，分頁切換：試算 / 規則 / 注意事項。</p>
+  </div>
+
+  <div class="tabs">
+    <button class="active" onclick="showTab('calc', this)">試算</button>
+    <button onclick="showTab('rules', this)">規則</button>
+    <button onclick="showTab('notes', this)">注意事項</button>
+  </div>
+
+  <section id="calc">
+    <div class="card">
+      <div class="title">包裹資料</div>
+
+      <label>商品分類</label>
+      <select id="cat">
+        <option value="furniture" selected>傢俱</option>
+      </select>
+
+      <br>
+
+      <div class="grid3">
+        <div>
+          <label>長（cm）</label>
+          <input id="l" type="number" value="">
+        </div>
+        <div>
+          <label>寬（cm）</label>
+          <input id="w" type="number" value="">
+        </div>
+        <div>
+          <label>高（cm）</label>
+          <input id="h" type="number" value="">
+        </div>
+      </div>
+
+      <br>
+
+      <div class="grid2">
+        <div>
+          <label>重量（kg）</label>
+          <input id="kg" type="number" value="">
+        </div>
+        <div>
+          <label>件數</label>
+          <input id="qty" type="number" value="1">
+        </div>
+      </div>
+
+      <br>
+
+      <button class="btn" type="button" id="calcBtn">開始計算</button>
+      <div class="tip">公式：運費 = max(重量×件數×18, ceil(單件材積)×件數×100, 1800)</div>
+    </div>
+
+    <div class="card result">
+      <div>材積</div>
+      <div class="big" id="v">0.00</div>
+    </div>
+
+    <div class="card result">
+      <div>重量</div>
+      <div class="big" id="kgout">0</div>
+    </div>
+
+    <div class="card result">
+      <div>運費</div>
+      <div class="big" id="fee">0</div>
+    </div>
+  </section>
+
+  <section id="rules" class="hidden">
+    <div class="card">
+      <div class="title">規則</div>
+      <div class="rule">
+        材積 = 長 × 寬 × 高 ÷ 28317<br>
+        運費 = 每公斤 18 元 或 每才 100 元，取高計算，低銷 1800。
+      </div>
+    </div>
+  </section>
+
+  <section id="notes" class="hidden">
+    <div class="card">
+      <div class="title">注意事項</div>
+      <div class="notebox">
+        尺寸請以 cm、重量請以 kg 輸入。<br>
+        件數會一起併入材積與重量計算。
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+function showTab(id, btn){
+  document.querySelectorAll('section').forEach(function(s){ s.classList.add('hidden'); });
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.tabs button').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function calc(){
+  var l = Number(document.getElementById('l').value || 0);
+  var w = Number(document.getElementById('w').value || 0);
+  var h = Number(document.getElementById('h').value || 0);
+  var kg = Number(document.getElementById('kg').value || 0);
+  var qty = Number(document.getElementById('qty').value || 1);
+
+  var volumeSingle = (l * w * h) / 28317;
+  var volumeTotal = volumeSingle * qty;
+  var caiTotal = Math.ceil(volumeSingle) * qty;
+  var weightTotal = kg * qty;
+
+  var byWeight = weightTotal * 18;
+  var byCai = caiTotal * 100;
+  var fee = Math.max(byWeight, byCai, 1800);
+
+  document.getElementById('v').textContent = volumeTotal.toFixed(2);
+  document.getElementById('kgout').textContent = String(weightTotal);
+  document.getElementById('fee').textContent = Math.round(fee).toLocaleString('zh-Hant-TW');
+}
+
+document.getElementById('calcBtn').onclick = calc;
+</script>
+</body>
+</html>
