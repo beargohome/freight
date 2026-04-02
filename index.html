@@ -130,6 +130,20 @@
     font-size:14px;
     line-height:1.75;
   }
+ .category-tip{
+  margin-top:12px;
+  background:#f7f1ea;
+  border:1.5px dashed #d8c8b8;
+  border-radius:16px;
+  padding:12px 14px;
+  color:#6b4e3d;
+  font-size:14px;
+  line-height:1.7;
+}
+.category-tip b{
+  display:block;
+  margin-bottom:4px;
+}
   .copy-tip{margin-top:8px;text-align:center;font-size:13px;color:#8A6A58;min-height:20px;}
   .section{margin-bottom:16px;}
   .section:last-child{margin-bottom:0;}
@@ -157,8 +171,7 @@
       <select id="category">
         <option value="傢俱">傢俱</option>
         <option value="家電">家電</option>
-        <option value="一般貨">一般貨</option>
-        <option value="其他">其他</option>
+                <option value="其他">其他</option>
       </select>
 
       <div class="grid3">
@@ -191,7 +204,12 @@
       <button class="btn-copy" id="copyBtn">一鍵複製給客服</button>
       <div class="copy-tip" id="copyTip"></div>
 
-      <div class="formula">公式：運費 = max(重量×件數×17, ceil(單件材積)×件數×100)</div>
+      <div class="formula">公式：傢俱 = max(重量×件數×17, ceil(單件材積)×件數×100)；家電 = max(重量×件數×40, ceil(單件材積)×件數×200)；其他 = max(重量×件數×25, ceil(單件材積)×件數×150)</div>
+      <div class="category-tip" id="categoryTip">
+        <b>目前分類：傢俱</b>
+        重量 17 / kg，材積 100 / 才，取較高者。<br>
+        此為快速試算，實際歡迎直接來諮詢客服。
+      </div>
     </div>
 
     <div class="results">
@@ -203,8 +221,8 @@
         <div class="title">總重量</div>
         <div class="value" id="weightDisplay">0</div>
       </div>
-      <div class="result-box">
-        <div class="title">運費</div>
+      <div class="result-box fee-box">
+        <div class="title">預估運費</div>
         <div class="value" id="feeDisplay">0</div>
       </div>
     </div>
@@ -226,11 +244,32 @@
     <div class="card">
       <h2>計價規則</h2>
       <div class="section">
+        <p>🪑 傢俱類</p>
         <p>• 單件材積 = 長 × 寬 × 高 ÷ 28317</p>
         <p>• 重量費 = 重量 × 件數 × 17</p>
         <p>• 材積費 = ceil(單件材積) × 件數 × 100</p>
-        <p>• 試算結果以重量費與材積費擇高顯示</p>
-        <p>• 網頁試算為預估價格，實際仍以客服最終確認為準</p>
+        <p>• 取重量費 / 材積費較高者</p>
+        <br>
+        <p>⚡ 家電類</p>
+        <p>• 單件材積 = 長 × 寬 × 高 ÷ 28317</p>
+        <p>• 重量費 = 重量 × 件數 × 40</p>
+        <p>• 材積費 = ceil(單件材積) × 件數 × 200</p>
+        <p>• 取重量費 / 材積費較高者</p>
+        <br>
+        <p>📦 其他類</p>
+        <p>• 單件材積 = 長 × 寬 × 高 ÷ 28317</p>
+        <p>• 重量費 = 重量 × 件數 × 25</p>
+        <p>• 材積費 = ceil(單件材積) × 件數 × 150</p>
+        <p>• 取重量費 / 材積費較高者</p>
+        <br>
+        <p>⚠️ 此為快速試算，實際歡迎直接來諮詢客服。</p>
+        <p>• 實際費用以倉庫測量為準</p>
+        <p>• 尺寸可能因包裝誤差產生差異，差幾公分也可能影響材積</p>
+        <p>• 建議提供包裝後尺寸＋重量，試算會更準確</p>
+        <br>
+        <p>💬 不確定怎麼算？</p>
+        <p>• 直接丟商品連結給客服</p>
+        <p>• 幫您抓最省運法（海運 / 海快）</p>
       </div>
     </div>
   </section>
@@ -309,11 +348,26 @@
     });
   });
 
+  function updateCategoryTip() {
+    const category = document.getElementById('category').value;
+    const tip = document.getElementById('categoryTip');
+    if (!tip) return;
+
+    if (category === '傢俱') {
+      tip.innerHTML = '<b>目前分類：傢俱</b>重量 17 / kg，材積 100 / 才，取較高者。<br>此為快速試算，實際歡迎直接來諮詢客服。';
+    } else if (category === '家電') {
+      tip.innerHTML = '<b>目前分類：家電</b>重量 40 / kg，材積 200 / 才，取較高者。<br>家電類通常價差較大，建議有連結也一起丟給客服更準。';
+    } else if (category === '其他') {
+      tip.innerHTML = '<b>目前分類：其他</b>重量 25 / kg，材積 150 / 才，取較高者。<br>此為快速試算，實際歡迎直接來諮詢客服。';
+    }
+  }
+
   function formatNumber(num) {
     return new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(num);
   }
 
   function calc() {
+    const category = document.getElementById('category').value;
     const l = parseFloat(document.getElementById('length').value);
     const w = parseFloat(document.getElementById('width').value);
     const h = parseFloat(document.getElementById('height').value);
@@ -342,8 +396,23 @@
 
     const singleVolume = (l * w * h) / 28317;
     const totalWeight = weight * qty;
-    const weightFee = totalWeight * 17;
-    const volumeFee = Math.ceil(singleVolume) * qty * 100;
+
+    let weightRate = 25;
+    let volumeRate = 150;
+
+    if (category === '傢俱') {
+      weightRate = 17;
+      volumeRate = 100;
+    } else if (category === '家電') {
+      weightRate = 40;
+      volumeRate = 200;
+    } else if (category === '其他') {
+      weightRate = 25;
+      volumeRate = 150;
+    }
+
+    const weightFee = totalWeight * weightRate;
+    const volumeFee = Math.ceil(singleVolume) * qty * volumeRate;
     const fee = Math.max(weightFee, volumeFee);
 
     document.getElementById('volumeDisplay').textContent = singleVolume.toFixed(2);
@@ -351,13 +420,16 @@
     document.getElementById('feeDisplay').textContent = formatNumber(fee);
 
     return {
-      category: document.getElementById('category').value,
+      category,
       l, w, h, weight, qty,
       volume: singleVolume.toFixed(2),
       totalWeight: formatNumber(totalWeight),
       fee: formatNumber(fee)
     };
   }
+
+  document.getElementById('category').addEventListener('change', updateCategoryTip);
+  updateCategoryTip();
 
   document.getElementById('calcBtn').addEventListener('click', () => {
     calc();
